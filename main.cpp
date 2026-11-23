@@ -41,8 +41,9 @@ int main(int argc, char *argv[]) {
 
     // start the game loop
     bool running = true;
-
-    SDL_FRect *rect = new SDL_FRect{150, 250, 300, 300};
+    int fall_rate = 200;
+    int curr_counter = 0;
+    SDL_FRect *rect = new SDL_FRect{150, -50, 50, 50};
     while (running) {
         SDL_Event event{0};
         while (SDL_PollEvent(&event)) {
@@ -64,9 +65,15 @@ int main(int argc, char *argv[]) {
         // SDL_RenderRect(state.renderer, rect);
         SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
         SDL_RenderFillRect(state.renderer, rect);
-        direction_user_should_move(rect);
         // swap buffers and present
         SDL_RenderPresent(state.renderer);
+        if (curr_counter == fall_rate - 1) {
+            rect->y += 50;
+            direction_user_should_move(rect);
+        }
+        if (rect->y >= 600) rect->y = -50;
+        
+        curr_counter = (curr_counter + 1)%fall_rate;
 
     }
     cleanup(state);
@@ -78,19 +85,11 @@ int direction_user_should_move(SDL_FRect *rect) {
     int direction = 0;
 
     if (key_states[SDL_SCANCODE_A]) {
-        rect->x -= 1;
+        rect->x -= 50;
     }
 
     if (key_states[SDL_SCANCODE_D]) {
-        rect->x += 1;
-    }
-
-    if (key_states[SDL_SCANCODE_W]) {
-        rect->y -= 1;
-    }
-
-    if (key_states[SDL_SCANCODE_S]) {
-        rect->y += 1;
+        rect->x += 50;
     }
 
     return direction;
