@@ -10,7 +10,6 @@ struct SDLState {
 };
 
 void cleanup(SDLState &state);
-int direction_user_should_move(SDL_FRect *rect);
 
 int main(int argc, char *argv[]) {
 
@@ -47,6 +46,10 @@ int main(int argc, char *argv[]) {
     while (running) {
         SDL_Event event{0};
         while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_EVENT_KEY_DOWN) {
+                if (event.key.key == SDLK_A && rect->x > 0) rect->x -= 50;
+                else if (event.key.key == SDLK_D && rect->x < 750) rect->x += 50;
+            }
             switch (event.type) {
                 case SDL_EVENT_QUIT:
                 {
@@ -67,32 +70,16 @@ int main(int argc, char *argv[]) {
         SDL_RenderFillRect(state.renderer, rect);
         // swap buffers and present
         SDL_RenderPresent(state.renderer);
-        if (curr_counter == fall_rate - 1) {
-            rect->y += 50;
-            direction_user_should_move(rect);
-        }
+        if (curr_counter == fall_rate - 1) rect->y += 50;
+
+        // direction_user_should_move(rect);
+
         if (rect->y >= 600) rect->y = -50;
         
         curr_counter = (curr_counter + 1)%fall_rate;
-
     }
     cleanup(state);
     return 0;
-}
-
-int direction_user_should_move(SDL_FRect *rect) {
-    const bool *key_states = SDL_GetKeyboardState(NULL);
-    int direction = 0;
-
-    if (key_states[SDL_SCANCODE_A]) {
-        rect->x -= 50;
-    }
-
-    if (key_states[SDL_SCANCODE_D]) {
-        rect->x += 50;
-    }
-
-    return direction;
 }
 
 void cleanup(SDLState &state) {
