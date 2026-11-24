@@ -1,9 +1,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-
-using namespace std;
-
 struct SDLState {
     SDL_Window *window;
     SDL_Renderer *renderer;
@@ -16,7 +13,7 @@ int main(int argc, char *argv[]) {
     SDLState state;
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error initializing SDL3", nullptr);
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error initializing SDL3", state.window);
         return 1;
     }
 
@@ -39,44 +36,100 @@ int main(int argc, char *argv[]) {
     }
 
     // start the game loop
-    bool running = true;
-    int fall_rate = 200;
-    int curr_counter = 0;
     SDL_FRect *rect = new SDL_FRect{150, -50, 50, 50};
+    const bool *key_states = SDL_GetKeyboardState(nullptr);
+    const double displacement = 50.0f;
+    const double fallThreshold = 2.0f;
+
+    double movementTimer = 0;
+    double fallTimer = 0;
+
+    //initial direction movement
+    bool initialMove = false;
+    bool running = true;
+    Uint64 prevTime = SDL_GetPerformanceCounter();
     while (running) {
+        Uint64 currTime = SDL_GetPerformanceCounter();
+        Uint64 frequency = SDL_GetPerformanceFrequency();
+        double dt = (double(currTime) - double(prevTime))/double(frequency);
         SDL_Event event{0};
+        //handle events
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_EVENT_KEY_DOWN) {
-                if (event.key.key == SDLK_A && rect->x > 0) rect->x -= 50;
-                else if (event.key.key == SDLK_D && rect->x < 750) rect->x += 50;
-            }
             switch (event.type) {
                 case SDL_EVENT_QUIT:
-                {
                     running = false;
                     break;
-                }
-            } 
+                case SDL_EVENT_KEY_DOWN:
+                    switch (event.key.scancode) {
+                        case SDL_SCANCODE_A:
+                            if (!initialMove) {
+                                rect->x -= 50.0f;
+                                initialMove = true;
+                                movementTimer = 0;
+                            }
+                            break;
+                        case SDL_SCANCODE_D:
+                            if (!initialMove) {
+                                rect->x += 50.0f;
+                                initialMove = true;
+                                movementTimer = 0;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case SDL_EVENT_KEY_UP:
+                    if (event.key.scancode == SDL_SCANCODE_A || event.key.scancode == SDL_SCANCODE_D) {
+                        initialMove = false;
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
 
-        //perform drawing commands
+        //update state
+
+        if (initialMove) {
+            movementTimer += dt;
+        }
+
+        fallTimer += dt;
+
+        if (initialMove && movementTimer >= 0.5f) {
+
+            if (key_states[SDL_SCANCODE_A]) {
+                rect->x -= displacement;
+            } else if (key_states[SDL_SCANCODE_D]) {
+                rect->x += displacement;
+            }
+
+            movementTimer -= 0.5f;
+        }
+
+        if (fallTimer >= fallThreshold) {
+            if (rect->y < 550) {
+                rect->y += displacement;
+                fallTimer -= fallThreshold;
+            } else {
+                rect->y = -50;
+                fallTimer = 0;
+            }
+        }
+
+        //clear screen
         SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 255);
         SDL_RenderClear(state.renderer);
-        
-        
-        // SDL_SetRenderDrawColor(state.renderer, 0, 255, 0, 255);
-        // SDL_RenderRect(state.renderer, rect);
+
+        //redraw
         SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
         SDL_RenderFillRect(state.renderer, rect);
-        // swap buffers and present
+
+        //present
         SDL_RenderPresent(state.renderer);
-        if (curr_counter == fall_rate - 1) rect->y += 50;
+        prevTime = currTime;
 
-        // direction_user_should_move(rect);
-
-        if (rect->y >= 600) rect->y = -50;
-        
-        curr_counter = (curr_counter + 1)%fall_rate;
     }
     cleanup(state);
     return 0;
