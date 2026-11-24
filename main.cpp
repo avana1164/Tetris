@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
     const bool *key_states = SDL_GetKeyboardState(nullptr);
     const double displacement = 50.0f;
     const double fallThreshold = 2.0f;
-    const double moveThreshold = 0.25f;
+    const double moveThreshold = 0.125f;
     const float BLOCK_WIDTH = 50.0f;
 
 
@@ -51,12 +51,14 @@ int main(int argc, char *argv[]) {
     //initial direction movement
     bool initialLeft = false;
     bool initialRight = false;
+    bool initialDown = false;
     bool running = true;
     Uint64 prevTime = SDL_GetPerformanceCounter();
     while (running) {
         Uint64 currTime = SDL_GetPerformanceCounter();
         Uint64 frequency = SDL_GetPerformanceFrequency();
         double dt = (double(currTime) - double(prevTime))/double(frequency);
+        bool initialMove = false;
         SDL_Event event{0};
         //handle events
         while (SDL_PollEvent(&event)) {
@@ -65,21 +67,30 @@ int main(int argc, char *argv[]) {
                     running = false;
                     break;
                 case SDL_EVENT_KEY_DOWN:
-                    switch (event.key.scancode) {
+                    initialMove = initialLeft || initialRight || initialDown;
+                    switch (event.key.scancode) { 
                         case SDL_SCANCODE_A:
-                            if (!(initialLeft || initialRight)) {
+                            if (!initialMove && rect->x > 0) {
                                 rect->x -= displacement;
                                 initialLeft = true;
                                 movementTimer = 0;
                             }
                             break;
                         case SDL_SCANCODE_D:
-                            if (!(initialLeft || initialRight)) {
+                            if (!initialMove && rect->x < 750) {
                                 rect->x += displacement;
                                 initialRight = true;
                                 movementTimer = 0;
                             }
                             break;
+                        case SDL_SCANCODE_S:
+                            if (!initialMove && rect->y < 550) {
+                                rect->y += displacement;
+                                initialDown = true;
+                                movementTimer = 0;
+                            } else if (rect->y >= 550) {
+                                rect->y = 0;
+                            }
                         default:
                             break;
                     }
@@ -92,6 +103,10 @@ int main(int argc, char *argv[]) {
                     if (event.key.scancode == SDL_SCANCODE_D) {
                         initialRight = false;
                     }
+
+                    if (event.key.scancode == SDL_SCANCODE_S) {
+                        initialDown = false;
+                    }
                     break;
                 default:
                     break;
@@ -100,30 +115,37 @@ int main(int argc, char *argv[]) {
 
         //update state
 
-        if (initialLeft || initialRight) {
-            movementTimer += dt;
-        }
+        initialMove = initialLeft || initialRight || initialDown;
 
-        fallTimer += dt;
+        if (initialMove) movementTimer += dt;
+
+        if (!initialDown) fallTimer += dt;
 
         if ((initialLeft || initialRight) && movementTimer >= moveThreshold) {
-
-            if (key_states[SDL_SCANCODE_A] && initialLeft) {
+            if (key_states[SDL_SCANCODE_A] && initialLeft && rect->x > 0) {
                 rect->x -= displacement;
-            } else if (key_states[SDL_SCANCODE_D] && initialRight) {
+            } else if (key_states[SDL_SCANCODE_D] && initialRight && rect->x < 750) {
                 rect->x += displacement;
             }
 
             movementTimer -= moveThreshold;
+        } else if (initialDown && movementTimer >= moveThreshold && key_states[SDL_SCANCODE_S]) {
+            if (rect->y < 550) {
+                rect->y += displacement;
+                movementTimer -= moveThreshold;
+            } else {
+                rect->y = 0;
+                movementTimer = 0;
+            }
         }
 
         //automated falling
-        if (fallTimer >= fallThreshold) {
+        if (!initialDown && fallTimer >= fallThreshold) {
             if (rect->y < 550) {
                 rect->y += displacement;
                 fallTimer -= fallThreshold;
             } else {
-                rect->y = -50;
+                rect->y = 0;
                 fallTimer = 0;
             }
         }
