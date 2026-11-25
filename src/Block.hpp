@@ -7,13 +7,17 @@ using namespace std;
 
 class Block {
     private:
-        vector<vector<int>> grid;
+        vector<pair<int, int>> grid;
         const double displacement = 50.0f;
+        const int numCells = 4;
+        int dimension;
         int x, y;
         char type;
+
+        void reverseRows();
     public:
         Block(char type);
         void move(int dx, int dy);
         void rotate(bool clockwise);
-        vector<vector<int>> getGrid();
+        vector<pair<int, int>> getGrid();
 };

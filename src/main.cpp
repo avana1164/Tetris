@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include "Block.hpp"
 
 struct SDLState {
     SDL_Window *window;
@@ -54,6 +55,7 @@ int main(int argc, char *argv[]) {
     bool rightHeld = false;
     bool downHeld = false;
     bool running = true;
+    // Block currBlock{'J'};
     Uint64 prevTime = SDL_GetPerformanceCounter();
     while (running) {
         Uint64 currTime = SDL_GetPerformanceCounter();
@@ -126,6 +128,7 @@ int main(int argc, char *argv[]) {
 
         if ((leftHeld || rightHeld) && movementTimer >= moveThreshold) {
             if (leftHeld && rect.x > 0) {
+                // currBlock.move(1, 0);
                 rect.x -= displacement;
             } else if (rightHeld && rect.x < 750) {
                 rect.x += displacement;

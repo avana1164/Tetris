@@ -6,25 +6,32 @@ Block::Block(char type) {
     this->type = type;
     switch (type) {
         case 'I':
-            grid = {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}, {0, 0, 0, 0}};
+            grid = {{1, 0}, {1, 1}, {1, 2}, {1, 3}};
+            dimension = 4;
             break;
         case 'J':
-            grid = {{1, 0, 0}, {1, 1, 1}, {0, 0, 0}};
+            grid = {{0, 0}, {1, 0}, {1, 1}, {1, 2}};
+            dimension = 3;
             break;      
         case 'L':
-            grid = {{0, 0, 1}, {1, 1, 1}, {0, 0, 0}};
+            grid = {{0, 2}, {1, 0}, {1, 1}, {1, 2}};
+            dimension = 3;
             break;
         case 'O':
-            grid = {{1, 1}, {1, 1}};
+            grid = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+            dimension = 2;
             break; 
         case 'S':
-            grid = {{0, 1, 1}, {1, 1, 0}, {0, 0, 0}};
+            grid = {{0, 1}, {0, 2}, {1, 0}, {1, 1}};
+            dimension = 3;
             break;   
         case 'T':
-            grid = {{0, 1, 0}, {1, 1, 1}, {0, 0, 0}};
+            grid = {{0, 1}, {1, 0}, {1, 1}, {1, 2}};
+            dimension = 3;
             break; 
         case 'Z':
-            grid = {{1, 1, 0}, {0, 1, 1}, {0, 0, 0}};
+            grid = {{0, 0}, {0, 1}, {1, 1}, {1, 2}};
+            dimension = 3;
             break; 
         default:
             break;   
@@ -37,30 +44,28 @@ void Block::move(int dx, int dy) {
 }
 
 void Block::rotate(bool clockwise) {
-    int gridSize = grid.size();
+    if (type == 'O') return;
 
     if (!clockwise) {
-        for (int i = 0; i < gridSize; ++i) {
-            reverse(grid[i].begin(), grid[i].end());
-        }
+        reverseRows();
     }
 
-    vector<vector<int>> copy = grid;
-
     //take transpose
-    for (int i = 0; i < gridSize; ++i) {
-        for (int j = 0; j < gridSize; ++j) {
-            grid[j][i] = copy[i][j];
-        }
+    for (int i = 0; i < numCells; ++i) {
+        swap(grid[i].first, grid[i].second);
     }
 
     if (clockwise) {
-        for (int i = 0; i < gridSize; ++i) {
-            reverse(grid[i].begin(), grid[i].end());
-        }
+        reverseRows();
     }
 }
 
-vector<vector<int>> Block::getGrid() {
+vector<pair<int, int>> Block::getGrid() {
     return grid;
+}
+
+void Block::reverseRows() {
+    for (int i = 0; i < numCells; ++i) {
+        grid[i].first = dimension - grid[i].first - 1;
+    }
 }
