@@ -38,7 +38,6 @@ int main(int argc, char *argv[]) {
     SDL_SetRenderVSync(state.renderer, 1);
 
     // start the game loop
-    const bool *key_states = SDL_GetKeyboardState(nullptr);
     const double displacement = 50.0f;
     const double fallThreshold = 2.0f;
     const double moveThreshold = 0.125f;
@@ -68,7 +67,6 @@ int main(int argc, char *argv[]) {
                     running = false;
                     break;
                 case SDL_EVENT_KEY_DOWN:
-                    // if (event.key.repeat) break;
                     held = leftHeld || rightHeld || downHeld;
                     switch (event.key.scancode) { 
                         case SDL_SCANCODE_A:
@@ -134,7 +132,7 @@ int main(int argc, char *argv[]) {
             }
 
             movementTimer -= moveThreshold;
-        } else if (downHeld && movementTimer >= moveThreshold && key_states[SDL_SCANCODE_S]) {
+        } else if (downHeld && movementTimer >= moveThreshold) {
             if (rect.y < 550) {
                 rect.y += displacement;
                 movementTimer -= moveThreshold;
