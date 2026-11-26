@@ -70,8 +70,16 @@ void Block::reverseRows() {
 void Block::draw(SDL_Renderer *renderer) {
     for (int i = 0; i < numCells; ++i) {
         cells[i].x = (grid[i].second * WIDTH + x);
-        cells[i].y += (grid[i].first * WIDTH + y);
+        cells[i].y = (grid[i].first * WIDTH + y);
     }
 
     SDL_RenderFillRects(renderer, cells.get(), numCells);
+}
+
+int Block::getX() {
+    return x;
+}
+
+int Block::getY() {
+    return y;
 }

@@ -42,11 +42,10 @@ int main(int argc, char *argv[]) {
     // start the game loop
     const double displacement = 50.0f;
     const double fallThreshold = 2.0f;
-    const double moveThreshold = 0.125f;
+    const double moveThreshold = 0.1f;
     const float BLOCK_WIDTH = 50.0f;
     const Uint64 frequency = SDL_GetPerformanceFrequency();
 
-    SDL_FRect rect{150, 0, BLOCK_WIDTH, BLOCK_WIDTH};
     double movementTimer = 0;
     double fallTimer = 0;
 
@@ -55,7 +54,7 @@ int main(int argc, char *argv[]) {
     bool rightHeld = false;
     bool downHeld = false;
     bool running = true;
-    Block currBlock{'J'};
+    Block currBlock{'T'};
     Uint64 prevTime = SDL_GetPerformanceCounter();
     while (running) {
         Uint64 currTime = SDL_GetPerformanceCounter();
@@ -72,28 +71,24 @@ int main(int argc, char *argv[]) {
                     held = leftHeld || rightHeld || downHeld;
                     switch (event.key.scancode) { 
                         case SDL_SCANCODE_A:
-                            if (!held && rect.x > 0) {
-                                rect.x -= displacement;
+                            if (!held && currBlock.getX() > 0) {
+                                currBlock.move(-1, 0);
                                 leftHeld = true;
                                 movementTimer = 0;
                             }
                             break;
                         case SDL_SCANCODE_D:
-                            if (!held && rect.x < 750) {
-                                rect.x += displacement;
+                            if (!held && currBlock.getX() < 750) {
+                                currBlock.move(1, 0);
                                 rightHeld = true;
                                 movementTimer = 0;
                             }
                             break;
                         case SDL_SCANCODE_S:
-                            if (!held) {
-                                if (rect.y < 550) {
-                                    rect.y += displacement;
-                                    downHeld = true;
-                                    movementTimer = 0;
-                                } else if (rect.y >= 550) {
-                                    rect.y = 0;
-                                }
+                            if (!held && currBlock.getY() < 550) {
+                                currBlock.move(0, 1);
+                                downHeld = true;
+                                movementTimer = 0;
                             }
                             break;
                         default:
@@ -126,42 +121,31 @@ int main(int argc, char *argv[]) {
 
         if (!downHeld) fallTimer += dt;
 
-        if ((leftHeld || rightHeld) && movementTimer >= moveThreshold) {
-            if (leftHeld) {
+        if (held && movementTimer >= moveThreshold) {
+            if (leftHeld && currBlock.getX() > 0) {
+                currBlock.move(-1, 0);
+            } else if (rightHeld && currBlock.getX() < 750) {
                 currBlock.move(1, 0);
-                // rect.x -= displacement;
-            } else if (rightHeld && rect.x < 750) {
-                rect.x += displacement;
+            } else if (downHeld && currBlock.getY() < 550) {
+                currBlock.move(0, 1);
             }
 
             movementTimer -= moveThreshold;
-        } else if (downHeld && movementTimer >= moveThreshold) {
-            if (rect.y < 550) {
-                rect.y += displacement;
-                movementTimer -= moveThreshold;
-            } else {
-                rect.y = 0;
-                movementTimer = 0;
-            }
         }
 
         //automated falling
-        if (!downHeld && fallTimer >= fallThreshold) {
-            if (rect.y < 550) {
-                rect.y += displacement;
-                fallTimer -= fallThreshold;
-            } else {
-                rect.y = 0;
-                fallTimer = 0;
-            }
+        if (!downHeld && fallTimer >= fallThreshold && currBlock.getY() < 550) {
+            currBlock.move(0, 1);
+            fallTimer -= fallThreshold;
         }
 
         //clear screen
         SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 255);
         SDL_RenderClear(state.renderer);
+        
         //redraw
         SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
-        SDL_RenderFillRect(state.renderer, &rect);
+        currBlock.draw(state.renderer);
 
         //present
         SDL_RenderPresent(state.renderer);

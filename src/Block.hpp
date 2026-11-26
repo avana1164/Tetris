@@ -24,4 +24,6 @@ class Block {
         void move(int dx, int dy);
         void rotate(bool clockwise);
         void draw(SDL_Renderer *renderer);
+        int getX();
+        int getY();
 };
