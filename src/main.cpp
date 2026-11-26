@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     // start the game loop
     const double fallThreshold = 2.0f;
     const double moveThreshold = 0.1f;
-    const double rotationThreshold = 0.1f;
+    const double rotationThreshold = 0.25f;
     const Uint64 frequency = SDL_GetPerformanceFrequency();
 
     double movementTimer = 0;
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
         rotateHeld = held[3] || held[4]; 
         if (moveHeld) movementTimer += dt;
 
-        if (held[3]) rotationTimer += dt;
+        if (rotateHeld) rotationTimer += dt;
 
         if (!held[2]) fallTimer += dt;
 
