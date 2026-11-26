@@ -48,18 +48,17 @@ int main(int argc, char *argv[]) {
     double movementTimer = 0;
     double fallTimer = 0;
     double rotationTimer = 0;
-
-    //initial direction movement
-    bool leftHeld = false;
-    bool rightHeld = false;
-    bool downHeld = false;
+    
+    //0 -> left, 1 -> right, 2 -> down, 3 -> up, 4 -> z
+    vector<bool> held{false, false, false, false, false};
+    bool moveHeld = false;
+    bool rotateHeld = false;
     bool running = true;
     Block currBlock{'T'};
     Uint64 prevTime = SDL_GetPerformanceCounter();
     while (running) {
         Uint64 currTime = SDL_GetPerformanceCounter();
         double dt = double(currTime - prevTime)/frequency;
-        bool held = false;
         SDL_Event event{0};
         //handle events
         while (SDL_PollEvent(&event)) {
@@ -68,27 +67,40 @@ int main(int argc, char *argv[]) {
                     running = false;
                     break;
                 case SDL_EVENT_KEY_DOWN:
-                    held = leftHeld || rightHeld || downHeld;
                     switch (event.key.scancode) { 
                         case SDL_SCANCODE_LEFT:
-                            if (!leftHeld && currBlock.getX() > 0) {
+                            if (!held[0] && currBlock.getX() > 0) {
                                 currBlock.move(-1, 0);
-                                leftHeld = true;
+                                held[0] = true;
                                 movementTimer = 0;
                             }
                             break;
                         case SDL_SCANCODE_RIGHT:
-                            if (!rightHeld && currBlock.getX() < 750) {
+                            if (!held[1] && currBlock.getX() < 750) {
                                 currBlock.move(1, 0);
-                                rightHeld = true;
+                                held[1] = true;
                                 movementTimer = 0;
                             }
                             break;
                         case SDL_SCANCODE_DOWN:
-                            if (!downHeld && currBlock.getY() < 550) {
+                            if (!held[2] && currBlock.getY() < 550) {
                                 currBlock.move(0, 1);
-                                downHeld = true;
+                                held[2] = true;
                                 movementTimer = 0;
+                            }
+                            break;
+                        case SDL_SCANCODE_UP:
+                            if (!held[3]) {
+                                currBlock.rotate(true);
+                                held[3] = true;
+                                rotationTimer = 0;
+                            }
+                            break;
+                        case SDL_SCANCODE_Z:
+                            if (!held[4]) {
+                                currBlock.rotate(false);
+                                held[4] = true;
+                                rotationTimer = 0;
                             }
                             break;
                         default:
@@ -97,15 +109,23 @@ int main(int argc, char *argv[]) {
                     break;
                 case SDL_EVENT_KEY_UP:
                     if (event.key.scancode == SDL_SCANCODE_LEFT) {
-                        leftHeld = false;
+                        held[0] = false;
                     }
                         
                     if (event.key.scancode == SDL_SCANCODE_RIGHT) {
-                        rightHeld = false;
+                        held[1] = false;
                     }
 
                     if (event.key.scancode == SDL_SCANCODE_DOWN) {
-                        downHeld = false;
+                        held[2] = false;
+                    }
+
+                    if (event.key.scancode == SDL_SCANCODE_UP) {
+                        held[3] = false;
+                    }
+
+                    if (event.key.scancode == SDL_SCANCODE_Z) {
+                        held[4] = false;
                     }
                     break;
                 default:
@@ -115,22 +135,24 @@ int main(int argc, char *argv[]) {
 
         //update state
 
-        held = leftHeld || rightHeld || downHeld;
+        moveHeld = held[0] || held[1] || held[2];
+        rotateHeld = held[3] || held[4]; 
+        if (moveHeld) movementTimer += dt;
 
-        if (held) movementTimer += dt;
+        if (held[3]) rotationTimer += dt;
 
-        if (!downHeld) fallTimer += dt;
+        if (!held[2]) fallTimer += dt;
 
-        if (held && movementTimer >= moveThreshold) {
-            if (leftHeld && currBlock.getX() > 0) {
+        if (moveHeld && movementTimer >= moveThreshold) {
+            if (held[0] && currBlock.getX() > 0) {
                 currBlock.move(-1, 0);
             }
 
-            if (rightHeld && currBlock.getX() < 750) {
+            if (held[1] && currBlock.getX() < 750) {
                 currBlock.move(1, 0);
             } 
             
-            if (downHeld && currBlock.getY() < 550) {
+            if (held[2] && currBlock.getY() < 550) {
                 currBlock.move(0, 1);
             }
 
@@ -138,9 +160,21 @@ int main(int argc, char *argv[]) {
         }
 
         //automated falling
-        if (!downHeld && fallTimer >= fallThreshold && currBlock.getY() < 550) {
+        if (!held[2] && fallTimer >= fallThreshold && currBlock.getY() < 550) {
             currBlock.move(0, 1);
             fallTimer -= fallThreshold;
+        }
+
+        if (rotateHeld && rotationTimer >= rotationThreshold) {
+            if (held[3]) {
+                currBlock.rotate(true);
+            }
+
+            if (held[4]) {
+                currBlock.rotate(false);
+            }
+
+            rotationTimer -= rotationThreshold;
         }
 
         //clear screen

@@ -63,7 +63,7 @@ void Block::rotate(bool clockwise) {
 
 void Block::reverseRows() {
     for (int i = 0; i < numCells; ++i) {
-        grid[i].first = dimension - grid[i].first - 1;
+        grid[i].second = dimension - grid[i].second - 1;
     }
 }
 
