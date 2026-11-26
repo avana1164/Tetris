@@ -40,14 +40,14 @@ int main(int argc, char *argv[]) {
     SDL_SetRenderVSync(state.renderer, 1);
 
     // start the game loop
-    const double displacement = 50.0f;
     const double fallThreshold = 2.0f;
     const double moveThreshold = 0.1f;
-    const float BLOCK_WIDTH = 50.0f;
+    const double rotationThreshold = 0.1f;
     const Uint64 frequency = SDL_GetPerformanceFrequency();
 
     double movementTimer = 0;
     double fallTimer = 0;
+    double rotationTimer = 0;
 
     //initial direction movement
     bool leftHeld = false;
@@ -70,22 +70,22 @@ int main(int argc, char *argv[]) {
                 case SDL_EVENT_KEY_DOWN:
                     held = leftHeld || rightHeld || downHeld;
                     switch (event.key.scancode) { 
-                        case SDL_SCANCODE_A:
-                            if (!held && currBlock.getX() > 0) {
+                        case SDL_SCANCODE_LEFT:
+                            if (!leftHeld && currBlock.getX() > 0) {
                                 currBlock.move(-1, 0);
                                 leftHeld = true;
                                 movementTimer = 0;
                             }
                             break;
-                        case SDL_SCANCODE_D:
-                            if (!held && currBlock.getX() < 750) {
+                        case SDL_SCANCODE_RIGHT:
+                            if (!rightHeld && currBlock.getX() < 750) {
                                 currBlock.move(1, 0);
                                 rightHeld = true;
                                 movementTimer = 0;
                             }
                             break;
-                        case SDL_SCANCODE_S:
-                            if (!held && currBlock.getY() < 550) {
+                        case SDL_SCANCODE_DOWN:
+                            if (!downHeld && currBlock.getY() < 550) {
                                 currBlock.move(0, 1);
                                 downHeld = true;
                                 movementTimer = 0;
@@ -96,15 +96,15 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 case SDL_EVENT_KEY_UP:
-                    if (event.key.scancode == SDL_SCANCODE_A) {
+                    if (event.key.scancode == SDL_SCANCODE_LEFT) {
                         leftHeld = false;
                     }
                         
-                    if (event.key.scancode == SDL_SCANCODE_D) {
+                    if (event.key.scancode == SDL_SCANCODE_RIGHT) {
                         rightHeld = false;
                     }
 
-                    if (event.key.scancode == SDL_SCANCODE_S) {
+                    if (event.key.scancode == SDL_SCANCODE_DOWN) {
                         downHeld = false;
                     }
                     break;
@@ -124,9 +124,13 @@ int main(int argc, char *argv[]) {
         if (held && movementTimer >= moveThreshold) {
             if (leftHeld && currBlock.getX() > 0) {
                 currBlock.move(-1, 0);
-            } else if (rightHeld && currBlock.getX() < 750) {
+            }
+
+            if (rightHeld && currBlock.getX() < 750) {
                 currBlock.move(1, 0);
-            } else if (downHeld && currBlock.getY() < 550) {
+            } 
+            
+            if (downHeld && currBlock.getY() < 550) {
                 currBlock.move(0, 1);
             }
 
@@ -142,7 +146,7 @@ int main(int argc, char *argv[]) {
         //clear screen
         SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 255);
         SDL_RenderClear(state.renderer);
-        
+
         //redraw
         SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
         currBlock.draw(state.renderer);
