@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <random>
 #include "Block.hpp"
 
 struct SDLState {
@@ -46,7 +47,6 @@ int main(int argc, char *argv[]) {
     const Uint64 frequency = SDL_GetPerformanceFrequency();
 
     SDL_FRect rect{150, 0, BLOCK_WIDTH, BLOCK_WIDTH};
-
     double movementTimer = 0;
     double fallTimer = 0;
 
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     bool rightHeld = false;
     bool downHeld = false;
     bool running = true;
-    // Block currBlock{'J'};
+    Block currBlock{'J'};
     Uint64 prevTime = SDL_GetPerformanceCounter();
     while (running) {
         Uint64 currTime = SDL_GetPerformanceCounter();
@@ -127,9 +127,9 @@ int main(int argc, char *argv[]) {
         if (!downHeld) fallTimer += dt;
 
         if ((leftHeld || rightHeld) && movementTimer >= moveThreshold) {
-            if (leftHeld && rect.x > 0) {
-                // currBlock.move(1, 0);
-                rect.x -= displacement;
+            if (leftHeld) {
+                currBlock.move(1, 0);
+                // rect.x -= displacement;
             } else if (rightHeld && rect.x < 750) {
                 rect.x += displacement;
             }
@@ -159,7 +159,6 @@ int main(int argc, char *argv[]) {
         //clear screen
         SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 255);
         SDL_RenderClear(state.renderer);
-
         //redraw
         SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
         SDL_RenderFillRect(state.renderer, &rect);

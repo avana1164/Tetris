@@ -1,17 +1,21 @@
 #pragma once
 
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 #include <vector>
 #include <algorithm>
+#include <memory>
 
 using namespace std;
 
 class Block {
     private:
         vector<pair<int, int>> grid;
-        const double displacement = 50.0f;
-        const int numCells = 4;
-        int dimension;
+        const float WIDTH;
+        const int numCells;
         int x, y;
+        unique_ptr<SDL_FRect[]> cells;
+        int dimension;
         char type;
 
         void reverseRows();
@@ -19,5 +23,5 @@ class Block {
         Block(char type);
         void move(int dx, int dy);
         void rotate(bool clockwise);
-        vector<pair<int, int>> getGrid();
+        void draw(SDL_Renderer *renderer);
 };

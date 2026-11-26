@@ -1,9 +1,6 @@
 #include "Block.hpp"
 
-Block::Block(char type) {
-    x = 400;
-    y = 0;
-    this->type = type;
+Block::Block(char type): WIDTH{25.0f}, numCells{4}, x{400}, y{0}, cells{make_unique<SDL_FRect[]>(numCells)}, type{type} {
     switch (type) {
         case 'I':
             grid = {{1, 0}, {1, 1}, {1, 2}, {1, 3}};
@@ -36,11 +33,15 @@ Block::Block(char type) {
         default:
             break;   
     }
+
+    for (int i = 0; i < numCells; ++i) {
+        cells[i] = SDL_FRect{grid[i].second * WIDTH + x, grid[i].first * WIDTH + y, WIDTH, WIDTH};
+    }
 }
 
 void Block::move(int dx, int dy) {
-    x += (dx * displacement);
-    y += (dy * displacement);
+    x += (dx * WIDTH);
+    y += (dy * WIDTH);
 }
 
 void Block::rotate(bool clockwise) {
@@ -60,12 +61,17 @@ void Block::rotate(bool clockwise) {
     }
 }
 
-vector<pair<int, int>> Block::getGrid() {
-    return grid;
-}
-
 void Block::reverseRows() {
     for (int i = 0; i < numCells; ++i) {
         grid[i].first = dimension - grid[i].first - 1;
     }
+}
+
+void Block::draw(SDL_Renderer *renderer) {
+    for (int i = 0; i < numCells; ++i) {
+        cells[i].x = (grid[i].second * WIDTH + x);
+        cells[i].y += (grid[i].first * WIDTH + y);
+    }
+
+    SDL_RenderFillRects(renderer, cells.get(), numCells);
 }
