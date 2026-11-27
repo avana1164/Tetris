@@ -10,7 +10,16 @@ struct SDLState {
 
 void cleanup(SDLState &state);
 char generateBlock();
-void drawGrid(SDL_Renderer *renderer, const int &GRID_WIDTH, const int &GRID_HEIGHT);
+void drawGrid(SDL_Renderer *renderer);
+
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 800;
+const double fallThreshold = 2.0f;
+const double moveThreshold = 0.1f;
+const double rotationThreshold = 0.25f;
+const int GRID_WIDTH = 10;
+const int GRID_HEIGHT = 20;
+const Uint64 frequency = SDL_GetPerformanceFrequency();
 
 int main(int argc, char *argv[]) {
 
@@ -22,8 +31,6 @@ int main(int argc, char *argv[]) {
     }
 
     // create the window
-    const int WINDOW_WIDTH = 800;
-    const int WINDOW_HEIGHT = 800;
     state.window = SDL_CreateWindow("Tetris", WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     if (!state.window) {
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", state.window);
@@ -42,12 +49,6 @@ int main(int argc, char *argv[]) {
     SDL_SetRenderVSync(state.renderer, 1);
 
     // start the game loop
-    const double fallThreshold = 2.0f;
-    const double moveThreshold = 0.1f;
-    const double rotationThreshold = 0.25f;
-    const int GRID_WIDTH = 10;
-    const int GRID_HEIGHT = 20;
-    const Uint64 frequency = SDL_GetPerformanceFrequency();
 
     double movementTimer = 0;
     double fallTimer = 0;
@@ -60,6 +61,7 @@ int main(int argc, char *argv[]) {
     bool running = true;
     char blockType = generateBlock();
     vector<pair<int, int>> filledCells;
+    vector<pair<int, int>> blockCells;
     Block currBlock{blockType};
     Uint64 prevTime = SDL_GetPerformanceCounter();
     while (running) {
@@ -75,40 +77,42 @@ int main(int argc, char *argv[]) {
                 case SDL_EVENT_KEY_DOWN:
                     switch (event.key.scancode) { 
                         case SDL_SCANCODE_LEFT:
-                            if (!held[0] && currBlock.getX() > 0) {
-                                currBlock.move(-1, 0);
+                            if (!held[0]) {
+                                currBlock.move(-1, 0, filledCells);
                                 held[0] = true;
                                 movementTimer = 0;
                             }
                             break;
                         case SDL_SCANCODE_RIGHT:
-                            if (!held[1] && currBlock.getX() < 750) {
-                                currBlock.move(1, 0);
+                            if (!held[1]) {
+                                currBlock.move(1, 0, filledCells);
                                 held[1] = true;
                                 movementTimer = 0;
                             }
                             break;
                         case SDL_SCANCODE_DOWN:
-                            if (!held[2] && currBlock.getY() < 550) {
-                                currBlock.move(0, 1);
+                            if (!held[2]) {
+                                currBlock.move(0, 1, filledCells);
                                 held[2] = true;
                                 movementTimer = 0;
                             }
                             break;
                         case SDL_SCANCODE_UP:
                             if (!held[3]) {
-                                currBlock.rotate(true);
+                                currBlock.rotate(true, filledCells);
                                 held[3] = true;
                                 rotationTimer = 0;
                             }
                             break;
                         case SDL_SCANCODE_Z:
                             if (!held[4]) {
-                                currBlock.rotate(false);
+                                currBlock.rotate(false, filledCells);
                                 held[4] = true;
                                 rotationTimer = 0;
                             }
                             break;
+                        case SDL_SCANCODE_SPACE:
+                            while (currBlock.move(0, 1, filledCells)) {}
                         default:
                             break;
                     }
@@ -150,34 +154,34 @@ int main(int argc, char *argv[]) {
         if (!held[2]) fallTimer += dt;
 
         if (moveHeld && movementTimer >= moveThreshold) {
-            if (held[0] && currBlock.getX() > 0) {
-                currBlock.move(-1, 0);
+            if (held[0]) {
+                currBlock.move(-1, 0, filledCells);
             }
 
-            if (held[1] && currBlock.getX() < 750) {
-                currBlock.move(1, 0);
+            if (held[1]) {
+                currBlock.move(1, 0, filledCells);
             } 
             
-            if (held[2] && currBlock.getY() < 550) {
-                currBlock.move(0, 1);
+            if (held[2]) {
+                currBlock.move(0, 1, filledCells);
             }
 
             movementTimer -= moveThreshold;
         }
 
         //automated falling
-        if (!held[2] && fallTimer >= fallThreshold && currBlock.getY() < 550) {
-            currBlock.move(0, 1);
+        if (!held[2] && fallTimer >= fallThreshold) {
+            currBlock.move(0, 1, filledCells);
             fallTimer -= fallThreshold;
         }
 
         if (rotateHeld && rotationTimer >= rotationThreshold) {
             if (held[3]) {
-                currBlock.rotate(true);
+                currBlock.rotate(true, filledCells);
             }
 
             if (held[4]) {
-                currBlock.rotate(false);
+                currBlock.rotate(false, filledCells);
             }
 
             rotationTimer -= rotationThreshold;
@@ -190,7 +194,7 @@ int main(int argc, char *argv[]) {
         //redraw
         SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
         currBlock.draw(state.renderer);
-        drawGrid(state.renderer, GRID_WIDTH, GRID_HEIGHT);
+        drawGrid(state.renderer);
 
         //present
         SDL_RenderPresent(state.renderer);
@@ -201,18 +205,18 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-void drawGrid(SDL_Renderer *renderer, const int &GRID_WIDTH, const int &GRID_HEIGHT) {
+void drawGrid(SDL_Renderer *renderer) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     float x = 275.0f;
     float y = 150.0f;
 
     for (int i = 0; i < GRID_WIDTH + 1; ++i) {
-        SDL_RenderLine(renderer, x, 150.0f, x, 650.0f);
+        SDL_RenderLine(renderer, x, 150, x, 650);
         x += 25.0f;
     }
 
     for (int i = 0; i < GRID_HEIGHT + 1; ++i) {
-        SDL_RenderLine(renderer, 275.0f, y, 525.0f, y);
+        SDL_RenderLine(renderer, 275, y, 525, y);
         y += 25.0f;
     }
 }

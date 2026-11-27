@@ -12,19 +12,18 @@ class Block {
     private:
         vector<pair<int, int>> blockCells;
         const float CELL_WIDTH;
+        const int MIN_X, MAX_X, MIN_Y, MAX_Y;
         const int numCells;
         int x, y;
         unique_ptr<SDL_FRect[]> cellRects;
         int dimension;
         char type;
-
         void reverseRows();
     public:
         Block(char type);
-        void move(int dx, int dy);
-        void rotate(bool clockwise);
+        bool move(int dx, int dy, const vector<pair<int, int>> &filledCells);
+        bool rotate(bool clockwise, const vector<pair<int, int>> &filledCells);
         void draw(SDL_Renderer *renderer);
         int getX();
         int getY();
-        vector<pair<int, int>> getBlockCells();
 };
