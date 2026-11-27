@@ -10,11 +10,11 @@ using namespace std;
 
 class Block {
     private:
-        vector<pair<int, int>> grid;
-        const float WIDTH;
+        vector<pair<int, int>> blockCells;
+        const float CELL_WIDTH;
         const int numCells;
         int x, y;
-        unique_ptr<SDL_FRect[]> cells;
+        unique_ptr<SDL_FRect[]> cellRects;
         int dimension;
         char type;
 
@@ -26,4 +26,5 @@ class Block {
         void draw(SDL_Renderer *renderer);
         int getX();
         int getY();
+        vector<pair<int, int>> getBlockCells();
 };

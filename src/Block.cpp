@@ -1,47 +1,54 @@
 #include "Block.hpp"
 
-Block::Block(char type): WIDTH{25.0f}, numCells{4}, x{400}, y{0}, cells{make_unique<SDL_FRect[]>(numCells)}, type{type} {
+Block::Block(char type): CELL_WIDTH{25.0f}, numCells{4}, y{150}, cellRects{make_unique<SDL_FRect[]>(numCells)}, type{type} {
     switch (type) {
         case 'I':
-            grid = {{1, 0}, {1, 1}, {1, 2}, {1, 3}};
+            blockCells = {{1, 0}, {1, 1}, {1, 2}, {1, 3}};
             dimension = 4;
+            x = 325;
             break;
         case 'J':
-            grid = {{0, 0}, {1, 0}, {1, 1}, {1, 2}};
+            blockCells = {{0, 0}, {1, 0}, {1, 1}, {1, 2}};
             dimension = 3;
+            x = 350;
             break;      
         case 'L':
-            grid = {{0, 2}, {1, 0}, {1, 1}, {1, 2}};
+            blockCells = {{0, 2}, {1, 0}, {1, 1}, {1, 2}};
             dimension = 3;
+            x = 350;
             break;
         case 'O':
-            grid = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+            blockCells = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
             dimension = 2;
+            x = 375;
             break; 
         case 'S':
-            grid = {{0, 1}, {0, 2}, {1, 0}, {1, 1}};
+            blockCells = {{0, 1}, {0, 2}, {1, 0}, {1, 1}};
             dimension = 3;
+            x = 350;
             break;   
         case 'T':
-            grid = {{0, 1}, {1, 0}, {1, 1}, {1, 2}};
+            blockCells = {{0, 1}, {1, 0}, {1, 1}, {1, 2}};
             dimension = 3;
+            x = 350;
             break; 
         case 'Z':
-            grid = {{0, 0}, {0, 1}, {1, 1}, {1, 2}};
+            blockCells = {{0, 0}, {0, 1}, {1, 1}, {1, 2}};
             dimension = 3;
+            x = 350;
             break; 
         default:
             break;   
     }
 
     for (int i = 0; i < numCells; ++i) {
-        cells[i] = SDL_FRect{grid[i].second * WIDTH + x, grid[i].first * WIDTH + y, WIDTH, WIDTH};
+        cellRects[i] = SDL_FRect{blockCells[i].second * CELL_WIDTH + x, blockCells[i].first * CELL_WIDTH + y, CELL_WIDTH, CELL_WIDTH};
     }
 }
 
 void Block::move(int dx, int dy) {
-    x += (dx * WIDTH);
-    y += (dy * WIDTH);
+    x += (dx * CELL_WIDTH);
+    y += (dy * CELL_WIDTH);
 }
 
 void Block::rotate(bool clockwise) {
@@ -53,7 +60,7 @@ void Block::rotate(bool clockwise) {
 
     //take transpose
     for (int i = 0; i < numCells; ++i) {
-        swap(grid[i].first, grid[i].second);
+        swap(blockCells[i].first, blockCells[i].second);
     }
 
     if (clockwise) {
@@ -63,17 +70,17 @@ void Block::rotate(bool clockwise) {
 
 void Block::reverseRows() {
     for (int i = 0; i < numCells; ++i) {
-        grid[i].second = dimension - grid[i].second - 1;
+        blockCells[i].second = dimension - blockCells[i].second - 1;
     }
 }
 
 void Block::draw(SDL_Renderer *renderer) {
     for (int i = 0; i < numCells; ++i) {
-        cells[i].x = (grid[i].second * WIDTH + x);
-        cells[i].y = (grid[i].first * WIDTH + y);
+        cellRects[i].x = (blockCells[i].second * CELL_WIDTH + x);
+        cellRects[i].y = (blockCells[i].first * CELL_WIDTH + y);
     }
 
-    SDL_RenderFillRects(renderer, cells.get(), numCells);
+    SDL_RenderFillRects(renderer, cellRects.get(), numCells);
 }
 
 int Block::getX() {
@@ -82,4 +89,8 @@ int Block::getX() {
 
 int Block::getY() {
     return y;
+}
+
+vector<pair<int, int>> Block::getBlockCells() {
+    return blockCells;
 }

@@ -9,6 +9,8 @@ struct SDLState {
 };
 
 void cleanup(SDLState &state);
+char generateBlock();
+void drawGrid(SDL_Renderer *renderer, const int &GRID_WIDTH, const int &GRID_HEIGHT);
 
 int main(int argc, char *argv[]) {
 
@@ -20,9 +22,9 @@ int main(int argc, char *argv[]) {
     }
 
     // create the window
-    const int WIDTH = 800;
-    const int HEIGHT = 600;
-    state.window = SDL_CreateWindow("Tetris", WIDTH, HEIGHT, 0);
+    const int WINDOW_WIDTH = 800;
+    const int WINDOW_HEIGHT = 800;
+    state.window = SDL_CreateWindow("Tetris", WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     if (!state.window) {
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Error creating window", state.window);
         cleanup(state);
@@ -43,6 +45,8 @@ int main(int argc, char *argv[]) {
     const double fallThreshold = 2.0f;
     const double moveThreshold = 0.1f;
     const double rotationThreshold = 0.25f;
+    const int GRID_WIDTH = 10;
+    const int GRID_HEIGHT = 20;
     const Uint64 frequency = SDL_GetPerformanceFrequency();
 
     double movementTimer = 0;
@@ -54,7 +58,9 @@ int main(int argc, char *argv[]) {
     bool moveHeld = false;
     bool rotateHeld = false;
     bool running = true;
-    Block currBlock{'T'};
+    char blockType = generateBlock();
+    vector<pair<int, int>> filledCells;
+    Block currBlock{blockType};
     Uint64 prevTime = SDL_GetPerformanceCounter();
     while (running) {
         Uint64 currTime = SDL_GetPerformanceCounter();
@@ -178,12 +184,13 @@ int main(int argc, char *argv[]) {
         }
 
         //clear screen
-        SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 255);
+        SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
         SDL_RenderClear(state.renderer);
 
         //redraw
         SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 255);
         currBlock.draw(state.renderer);
+        drawGrid(state.renderer, GRID_WIDTH, GRID_HEIGHT);
 
         //present
         SDL_RenderPresent(state.renderer);
@@ -192,6 +199,47 @@ int main(int argc, char *argv[]) {
     }
     cleanup(state);
     return 0;
+}
+
+void drawGrid(SDL_Renderer *renderer, const int &GRID_WIDTH, const int &GRID_HEIGHT) {
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    float x = 275.0f;
+    float y = 150.0f;
+
+    for (int i = 0; i < GRID_WIDTH + 1; ++i) {
+        SDL_RenderLine(renderer, x, 150.0f, x, 650.0f);
+        x += 25.0f;
+    }
+
+    for (int i = 0; i < GRID_HEIGHT + 1; ++i) {
+        SDL_RenderLine(renderer, 275.0f, y, 525.0f, y);
+        y += 25.0f;
+    }
+}
+
+char generateBlock() {
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<int> range(0, 6);
+
+    switch (range(gen)) {
+        case 0:
+            return 'I';
+        case 1:
+            return 'J';
+        case 2:
+            return 'L';
+        case 3:
+            return 'O';
+        case 4:
+            return 'S';
+        case 5:
+            return 'T';
+        case 6:
+            return 'Z';
+        default:
+            return ' ';
+    }
 }
 
 void cleanup(SDLState &state) {
